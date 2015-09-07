@@ -1,10 +1,16 @@
 package example;
 
 import httpfailover.FailoverHttpClient;
+
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
@@ -15,12 +21,22 @@ import java.util.List;
 public class HttpFailoverExample {
 
     public static void main(String[] main) throws IOException {
+    	
+    	
+    	
 
         // create anf configure FailoverHttpClient just as you would a DefaultHttpClient
-        PoolingClientConnectionManager cm = new PoolingClientConnectionManager();
+    	PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setDefaultMaxPerRoute(20);
         cm.setMaxTotal(100);
-        FailoverHttpClient failoverHttpClient = new FailoverHttpClient(cm);
+        CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(cm).build();
+        FailoverHttpClient failoverHttpClient = new FailoverHttpClient(httpClient);
+        
+    	//the old way
+        /*PoolingClientConnectionManager cmOld = new PoolingClientConnectionManager();
+        cmOld.setDefaultMaxPerRoute(20);
+        cmOld.setMaxTotal(100);
+        FailoverHttpClient failoverHttpClientOld = new FailoverHttpClient(cmOld);*/
 
 
         // have ready a list of hosts to try the call
@@ -36,7 +52,8 @@ public class HttpFailoverExample {
         // and localhost:9191 if that fails.
 
         try {
-            HttpResponse response = failoverHttpClient.execute(hosts, request);
+        	HttpResponse response = failoverHttpClient.execute(hosts, request);
+           // HttpResponse response = failoverHttpClientOld.execute(hosts, request);        	
             System.out.println("One of the hosts responded with " + EntityUtils.toString(response.getEntity()));
         }
         catch(IOException ex) {

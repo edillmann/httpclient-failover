@@ -4,7 +4,7 @@
     <name>httpclient-failover</name>
     <groupId>httpfailover</groupId>
     <artifactId>httpclient-failover</artifactId>
-    <version>1.0</version>
+    <version>2.0</version>
     <description>An extension to apache httpclient that adds support for failover on multiple http hosts.</description>
     <distributionManagement>
         <repository>
@@ -21,12 +21,16 @@
             <name>Matteo Caprari</name>
             <email>matteo.caprari@gmail.com</email>
         </contributor>
+         <contributor>
+            <name>Maya Kostova</name>
+            <email>maya.kostova@gmail.com</email>
+        </contributor>
     </contributors>
     <dependencies>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.2.3</version>
+            <version>4.5</version>
         </dependency>
     </dependencies>
     <build>

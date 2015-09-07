@@ -24,7 +24,10 @@ import org.apache.http.HttpResponse;
 import org.apache.http.annotation.GuardedBy;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
@@ -46,6 +49,7 @@ import java.util.List;
  * to the next host in the list. This behaviour is controlled by the {@link org.apache.http.client.HttpRequestRetryHandler}
  * configured in {@link @DefaultHttpClient}.
  */
+@SuppressWarnings("deprecation")
 public class FailoverHttpClient extends DefaultHttpClient {
 
     private final Log log = LogFactory.getLog(getClass());
@@ -53,6 +57,8 @@ public class FailoverHttpClient extends DefaultHttpClient {
     /** the multi-target retry handler **/
     @GuardedBy("this")
     private FailoverRetryHandler multiTargetRetryHandler = null;
+
+    private CloseableHttpClient mClient;
 
     /**
      * Creates a new HTTP client from parameters and a connection manager.
@@ -80,6 +86,17 @@ public class FailoverHttpClient extends DefaultHttpClient {
     public FailoverHttpClient() {
         super(null, null);
     }
+    
+    
+    public FailoverHttpClient(CloseableHttpClient aClient) {
+        mClient = aClient;
+    }
+
+
+    public synchronized CloseableHttpClient getClient(){
+        return mClient;
+    }
+    
 
     public synchronized FailoverRetryHandler getMultiTargetRetryHandler() {
         if (multiTargetRetryHandler == null) {
@@ -252,6 +269,94 @@ public class FailoverHttpClient extends DefaultHttpClient {
             this.log.debug(ex.getMessage(), ex);
         }
         this.log.info("Trying request on next target");
+    }
+    
+    
+    @Override
+    public void close() {
+        try {
+            if (mClient != null) {
+                mClient.close();
+            } else {
+                super.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    public CloseableHttpResponse execute(HttpHost target, HttpRequest request, HttpContext context) throws IOException {
+        if (mClient != null) {
+            return mClient.execute(target, request, context);
+        } else {
+            return super.execute(target, request, context);
+        }
+    }
+
+    @Override
+    public CloseableHttpResponse execute(HttpUriRequest request, HttpContext context) throws IOException {
+        if (mClient != null) {
+            return mClient.execute(request, context);
+        } else {
+            return super.execute(request, context);
+        }
+    }
+
+    @Override
+    public CloseableHttpResponse execute(HttpUriRequest request) throws IOException {
+        if (mClient != null) {
+            return mClient.execute(request);
+        } else {
+            return super.execute(request);
+        }
+
+    }
+
+    @Override
+    public CloseableHttpResponse execute(HttpHost target, HttpRequest request) throws IOException {
+        if (mClient != null) {
+            return mClient.execute(target, request);
+        } else {
+            return super.execute(target, request);
+        }
+    }
+
+    @Override
+    public <T> T execute(HttpUriRequest request, ResponseHandler<? extends T> responseHandler) throws IOException {
+        if (mClient != null) {
+            return mClient.execute(request, responseHandler);
+        } else {
+            return super.execute(request, responseHandler);
+        }
+    }
+
+    @Override
+    public <T> T execute(HttpUriRequest request, ResponseHandler<? extends T> responseHandler, HttpContext context) throws IOException {
+        if (mClient != null) {
+            return mClient.execute(request, responseHandler, context);
+        } else {
+            return super.execute(request, responseHandler, context);
+        }
+    }
+
+    @Override
+    public <T> T execute(HttpHost target, HttpRequest request, ResponseHandler<? extends T> responseHandler) throws IOException {
+        if (mClient != null) {
+            return mClient.execute(target, request, responseHandler);
+        } else {
+            return super.execute(target, request, responseHandler);
+        }
+    }
+
+    @Override
+    public <T> T execute(HttpHost target, HttpRequest request, ResponseHandler<? extends T> responseHandler, HttpContext context) throws IOException {
+        if (mClient != null) {
+            return mClient.execute(target, request, responseHandler, context);
+        } else {
+            return super.execute(target, request, responseHandler, context);
+        }
     }
 
 }
